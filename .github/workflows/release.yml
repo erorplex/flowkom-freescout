@@ -1,0 +1,26 @@
+name: Release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build module ZIP (Ordner Flowkom/ im Root, wie FreeScout ihn erwartet)
+        run: |
+          mkdir -p /tmp/build/Flowkom
+          rsync -a --exclude='.git' --exclude='.github' ./ /tmp/build/Flowkom/
+          cd /tmp/build && zip -rq Flowkom.zip Flowkom
+      - name: Version gegen module.json pruefen
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          VERSION=$(python3 -c "import json; print(json.load(open('module.json'))['version'])")
+          if [ "$TAG" != "$VERSION" ]; then echo "Tag $TAG != module.json $VERSION"; exit 1; fi
+      - name: Release erstellen
+        uses: softprops/action-gh-release@v2
+        with:
+          files: /tmp/build/Flowkom.zip
+          generate_release_notes: true

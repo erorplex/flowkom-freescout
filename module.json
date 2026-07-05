@@ -1,0 +1,29 @@
+{
+    "name": "Flowkom",
+    "alias": "flowkom",
+    "description": "Flowkom Helpdesk Suite: Kundendaten-Widget, Marktplatz-Mail-Cleaner, Ticket-Merger fuer eBay & Amazon, QuickLinks, Chat-Ansicht und Ein-Klick-Tracking-Antworten. Alle Funktionen einzeln zuschaltbar unter Einstellungen -> Flowkom.",
+    "version": "2.0.2",
+    "detailsUrl": "",
+    "author": "Pixkom GmbH",
+    "authorUrl": "https://flowkom.de",
+    "requiredAppVersion": "1.8.0",
+    "license": "Proprietary",
+    "keywords": [
+        "flowkom",
+        "ebay",
+        "amazon",
+        "marketplace"
+    ],
+    "active": 1,
+    "order": 0,
+    "providers": [
+        "Modules\\Flowkom\\Providers\\FlowkomServiceProvider"
+    ],
+    "aliases": {},
+    "files": [
+        "start.php"
+    ],
+    "requires": [],
+    "latestVersionUrl": "https://raw.githubusercontent.com/erorplex/flowkom-freescout/main/module.json",
+    "latestVersionZipUrl": "https://github.com/erorplex/flowkom-freescout/releases/latest/download/Flowkom.zip"
+}
