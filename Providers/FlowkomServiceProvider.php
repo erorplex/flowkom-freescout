@@ -5,6 +5,7 @@ namespace Modules\Flowkom\Providers;
 use Illuminate\Support\ServiceProvider;
 use Modules\Flowkom\Services\ChatView;
 use Modules\Flowkom\Services\DisplayFix;
+use Modules\Flowkom\Services\EbayReply;
 use Modules\Flowkom\Services\MailCleaner;
 use Modules\Flowkom\Services\Mergers;
 use Modules\Flowkom\Services\QuickLinks;
@@ -60,6 +61,9 @@ class FlowkomServiceProvider extends ServiceProvider
             return $data;
         }, 25, 1);
 
+        if (Settings::featureOn('ebay_clean_reply')) {
+            EbayReply::register();
+        }
         if (Settings::featureOn('quicklinks')) {
             QuickLinks::register();
         }
