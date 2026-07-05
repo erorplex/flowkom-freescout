@@ -94,8 +94,31 @@ class MailCleaner
         }
 
         $meta = self::ebayMeta($body);
+        $refId = self::ebayReferenceId($body);
 
-        return self::buildHtml((string) $message, $meta, 'ebay', $images);
+        return self::buildHtml((string) $message, $meta, 'ebay', $images, $refId);
+    }
+
+    /**
+     * eBay bettet in jede M2M-Mail eine Zustell-Referenz ein
+     * ("Email reference id: [#...#]"). Fehlt diese Referenz in der ANTWORT
+     * des Verkaeufers, kann eBay sie dem Kaeufer nicht zuordnen und lehnt die
+     * Zustellung ab ("... konnte nicht zugestellt werden"). Sie MUSS deshalb
+     * im bereinigten Body erhalten bleiben — bei APP_EMAIL_CONV_HISTORY=full/last
+     * zitiert FreeScout die eingehende Nachricht (inkl. Referenz) in die Antwort.
+     *
+     * @return string|null Der reine Token-Inhalt ohne die [# #]-Klammern.
+     */
+    public static function ebayReferenceId($body)
+    {
+        if (!is_string($body) || $body === '') {
+            return null;
+        }
+        $text = self::htmlFragmentToText($body);
+        if (preg_match('/\[#\s*([A-Za-z0-9]{16,64})\s*#\]/', $text, $m)) {
+            return $m[1];
+        }
+        return null;
     }
 
     /**
@@ -235,7 +258,7 @@ class MailCleaner
     // HTML-Ausgabe
     // =========================================================
 
-    private static function buildHtml($message, array $meta, $source, array $images = [])
+    private static function buildHtml($message, array $meta, $source, array $images = [], $ebayRefId = null)
     {
         $html = '<!--mmc:cleaned:' . $source . '-->';
         $html .= '<div class="mmc-message">' . nl2br(htmlspecialchars($message, ENT_QUOTES, 'UTF-8')) . '</div>';
@@ -252,6 +275,15 @@ class MailCleaner
             }
             $html .= '<div class="mmc-meta" style="margin-top:12px;padding-top:8px;border-top:1px solid #e3e8eb;color:#778;font-size:12px;">'
                 . implode(' &nbsp;&middot;&nbsp; ', $parts)
+                . '</div>';
+        }
+
+        // eBay-Zustell-Referenz erhalten: eBay ordnet Verkaeufer-Antworten
+        // hierueber zu. Ohne diese Zeile in der (zitierten) Antwort bounct
+        // eBay die Nachricht. Nicht entfernen.
+        if ($ebayRefId !== null && $ebayRefId !== '') {
+            $html .= '<div class="mmc-ebay-ref" style="margin-top:10px;color:#aab2ba;font-size:11px;">'
+                . 'Email reference id: [#' . htmlspecialchars($ebayRefId, ENT_QUOTES, 'UTF-8') . '#]'
                 . '</div>';
         }
 
