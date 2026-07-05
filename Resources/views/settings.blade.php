@@ -13,7 +13,7 @@
     <div class="form-group">
         <label class="col-sm-2 control-label">{{ __('API-Key') }}</label>
         <div class="col-sm-6">
-            <input type="password" class="form-control input-sized-lg" name="settings[flowkom.api_key]" value="" placeholder="{{ ($settings['flowkom.api_key'] ?? '') ? '••••••••••••  ('.__('gesetzt').')' : __('API-Key eingeben') }}" autocomplete="new-password">
+            <input type="password" class="form-control input-sized-lg" name="settings[flowkom.api_key]" value="{{ ($settings['flowkom.api_key'] ?? '') ? '********' : '' }}" placeholder="{{ __('API-Key eingeben') }}" autocomplete="new-password">
             <p class="form-help">{{ __('Leer lassen, um den gespeicherten Key zu behalten.') }} <a href="#" id="flowkom-test-btn">{{ __('Verbindung testen') }}</a> <span id="flowkom-test-result"></span></p>
         </div>
     </div>

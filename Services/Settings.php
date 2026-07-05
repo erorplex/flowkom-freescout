@@ -114,7 +114,19 @@ class Settings
                 'mailbox_options' => $mailbox_options,
                 'features'        => self::FEATURES,
             ];
-            $params['settings'] = ['dummy' => []];
+            // WICHTIG: Jeder Feature-Toggle braucht default=true, sonst loescht
+            // FreeScouts Save-Loop die Option beim Abhaken (Checkbox nicht im
+            // POST -> Option::remove()) und featureOn() faellt auf den Code-
+            // Default true zurueck -> Toggle laesst sich nicht ausschalten.
+            $settingsParams = [];
+            foreach (array_keys(self::FEATURES) as $key) {
+                $settingsParams['flowkom.feature_' . $key] = ['default' => true];
+            }
+            // API-Key als safe_password: ein rein aus '*' bestehender Wert
+            // (unveraendertes Feld) wird vom Save-Loop uebersprungen -> der
+            // gespeicherte Key geht beim Speichern nicht verloren.
+            $settingsParams['flowkom.api_key'] = ['safe_password' => true];
+            $params['settings'] = $settingsParams;
             return $params;
         }, 20, 2);
 
@@ -127,9 +139,10 @@ class Settings
                 return $request;
             }
 
-            foreach (array_keys(self::FEATURES) as $key) {
-                \Option::set('flowkom.feature_' . $key, $request->input('settings.flowkom\.feature_' . $key) ? 1 : 0);
-            }
+            // Feature-Toggles werden vom FreeScout-Save-Loop selbst gespeichert
+            // (section_params default=true sorgt fuer korrektes false beim
+            // Abhaken). Hier NICHT anfassen — der alte dot-notation-Zugriff
+            // (`settings.flowkom\.feature_x`) las immer null.
 
             \Option::set('flowkom.api_url', rtrim(trim((string) $request->input('settings.flowkom\.api_url', '')), '/'));
             $apiKey = trim((string) $request->input('settings.flowkom\.api_key', ''));
