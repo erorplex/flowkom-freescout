@@ -15,8 +15,7 @@ class Settings
     const FEATURES = [
         'widget'       => 'Flowkom-Widget (Kundendaten & Bestellungen in der Sidebar)',
         'quicklinks'   => 'Marktplatz-QuickLinks (Seller Hub / Seller Central)',
-        'cleaner'      => 'Mail-Cleaner (eBay-/Amazon-Template-Müll entfernen)',
-        'ebay_clean_reply' => 'Saubere eBay-Antworten (ohne zitierten Verlauf, Referenz-ID automatisch eingebettet)',
+        'cleaner'      => 'Mail-Cleaner (Anzeige: eBay-/Amazon-Template-Müll im Ticket ausblenden — Original bleibt für die Zustellung erhalten)',
         'merge_ebay'   => 'eBay Ticket-Merger (gleicher Käufer + Artikel)',
         'merge_amazon' => 'Amazon Ticket-Merger (gleiche Bestellnummer)',
         'chatview'     => 'Chat-Ansicht (Bubble-Ansicht pro Ticket umschaltbar)',

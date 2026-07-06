@@ -5,7 +5,6 @@ namespace Modules\Flowkom\Providers;
 use Illuminate\Support\ServiceProvider;
 use Modules\Flowkom\Services\ChatView;
 use Modules\Flowkom\Services\DisplayFix;
-use Modules\Flowkom\Services\EbayReply;
 use Modules\Flowkom\Services\MailCleaner;
 use Modules\Flowkom\Services\Mergers;
 use Modules\Flowkom\Services\QuickLinks;
@@ -30,9 +29,8 @@ class FlowkomServiceProvider extends ServiceProvider
         $this->registerRoutes();
         $this->registerCsp();
 
-        // Mail-Pipeline: erst Merger (Prio 20), dann Cleaner (Prio 25) —
-        // die Merger matchen auf Betreff/Absender, der Cleaner ersetzt danach
-        // den Body. Beides fail-open: jeder Fehler => Mail bleibt unverändert.
+        // Mail-Pipeline: nur der Merger fasst eingehende Mails an (Betreff/
+        // Absender-Matching, KEIN Body-Touch). Fail-open.
         \Eventy::addFilter('fetch_emails.data_to_save', function ($data) {
             try {
                 return Mergers::apply($data);
@@ -42,28 +40,38 @@ class FlowkomServiceProvider extends ServiceProvider
             }
         }, 20, 1);
 
-        \Eventy::addFilter('fetch_emails.data_to_save', function ($data) {
+        // ANZEIGE-Cleaner: bereinigt Marktplatz-Templates NUR in der Ticket-
+        // Ansicht (thread.body_output). Der gespeicherte Body bleibt IMMER das
+        // Original. WARUM: eBay stellt Verkaeufer-Antworten nur zu, wenn die
+        // zitierte Original-Mail ihre versteckten Marker enthaelt — Live-Beweis
+        // 05./06.07.26: ersetzter Body => Bounce von failurenotice@, roher
+        // Body => zugestellt. Der fruehere fetch-time-Body-Ersatz ist deshalb
+        // dauerhaft entfernt und darf NIE wieder eingebaut werden.
+        \Eventy::addFilter('thread.body_output', function ($body, $thread, $conversation, $mailbox) {
             try {
                 if (!Settings::featureOn('cleaner')) {
-                    return $data;
+                    return $body;
                 }
-                if (empty($data['message_from_customer']) || empty($data['from']) || empty($data['body'])) {
-                    return $data;
+                if ((int) $thread->type !== \App\Thread::TYPE_CUSTOMER) {
+                    return $body;
                 }
-                $clean = MailCleaner::clean($data['body'], $data['from']);
+                if (strpos((string) $body, 'mmc:cleaned') !== false) {
+                    return $body; // Altbestand: wurde noch beim Abruf ersetzt
+                }
+                $from = (string) ($thread->from ?: ($conversation->customer_email ?? ''));
+                // WICHTIG: den ROHEN gespeicherten Body cleanen — der uebergebene
+                // $body kommt aus getBodyWithFormatedLinks(), das die Template-
+                // Marker (preheaderMod/UserInputtedText) bereits wegnormalisiert.
+                $clean = MailCleaner::clean((string) $thread->body, $from);
                 if ($clean !== null) {
-                    $data['body'] = $clean;
-                    \Helper::log(FLOWKOM_MODULE, 'Mail bereinigt: ' . mb_substr((string) ($data['subject'] ?? ''), 0, 120));
+                    return $clean;
                 }
             } catch (\Throwable $e) {
-                \Helper::log(FLOWKOM_MODULE, 'Cleaner-ERROR (Body unverändert): ' . $e->getMessage());
+                \Helper::log(FLOWKOM_MODULE, 'DisplayCleaner-ERROR (Original angezeigt): ' . $e->getMessage());
             }
-            return $data;
-        }, 25, 1);
+            return $body;
+        }, 20, 4);
 
-        if (Settings::featureOn('ebay_clean_reply')) {
-            EbayReply::register();
-        }
         if (Settings::featureOn('quicklinks')) {
             QuickLinks::register();
         }
