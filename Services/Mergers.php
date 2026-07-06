@@ -18,16 +18,13 @@ use App\Conversation;
  */
 class Mergers
 {
-    const EBAY_MEMBER_PATTERN = '/@members\.ebay\./i';
+    // Absender verankert an der eBay-/Amazon-Basis-Domain am Zeilenende —
+    // verhindert Spoofing (x@members.ebay.evil.com bzw. foo@amazon.de.evil.com),
+    // das ein unverankerter substr/preg durchgelassen haette.
+    const EBAY_MEMBER_PATTERN = '/@members\.ebay\.[a-z]{2,3}(\.[a-z]{2})?$/i';
+    const AMAZON_SENDER_PATTERN = '/@([a-z0-9-]+\.)*amazon\.[a-z]{2,3}(\.[a-z]{2})?$/i';
     const EBAY_ARTICLE_PATTERN = '/#(\d{12,14})/';
     const AMAZON_ORDER_PATTERN = '/(\d{3}-\d{7}-\d{7})/';
-
-    const AMAZON_SENDER_PATTERNS = [
-        '@marketplace.amazon.',
-        '@amazon.de', '@amazon.com', '@amazon.co.uk', '@amazon.fr',
-        '@amazon.it', '@amazon.es', '@amazon.nl', '@amazon.pl',
-        '@amazon.se', '@amazon.com.be', '@amazon.ca', '@amazon.com.br',
-    ];
 
     /**
      * fetch_emails.data_to_save-Filter. Gibt $data zurück, ggf. mit prev_thread.
@@ -48,6 +45,9 @@ class Mergers
         $from = strtolower(trim($data['from']));
         $subject = (string) ($data['subject'] ?? '');
         $maxAgeDays = (int) \Option::get('flowkom.merge_max_age_days', 60);
+        if ($maxAgeDays < 1) {
+            $maxAgeDays = 60; // leeres/0-Feld darf den Merger nicht still abschalten
+        }
 
         if (Settings::featureOn('merge_ebay') && preg_match(self::EBAY_MEMBER_PATTERN, $from)) {
             return self::mergeEbay($data, $from, $subject, $mailbox, $maxAgeDays);
@@ -96,7 +96,12 @@ class Mergers
         }
         $order = $m[1];
 
+        // customer_email MUSS matchen (wie beim eBay-Merger): sonst koennte
+        // ein Fremdabsender, der eine gueltige Bestellnummer im Betreff nennt,
+        // seinen Thread ins Ticket des echten Kaeufers injizieren — FreeScout
+        // wechselt den Conversation-Kunden dann auf den Absender (Hijack).
         $conversation = Conversation::where('mailbox_id', $mailbox->id)
+            ->where('customer_email', $from)
             ->where('subject', 'LIKE', '%' . $order . '%')
             ->where('state', Conversation::STATE_PUBLISHED)
             ->where('created_at', '>=', now()->subDays($maxAgeDays))
@@ -119,12 +124,7 @@ class Mergers
 
     public static function isAmazonSender($from)
     {
-        foreach (self::AMAZON_SENDER_PATTERNS as $pattern) {
-            if (strpos($from, $pattern) !== false) {
-                return true;
-            }
-        }
-        return false;
+        return (bool) preg_match(self::AMAZON_SENDER_PATTERN, (string) $from);
     }
 
     /**

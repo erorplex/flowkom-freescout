@@ -55,8 +55,12 @@ class FlowkomServiceProvider extends ServiceProvider
                 if ((int) $thread->type !== \App\Thread::TYPE_CUSTOMER) {
                     return $body;
                 }
-                if (strpos((string) $body, 'mmc:cleaned') !== false) {
-                    return $body; // Altbestand: wurde noch beim Abruf ersetzt
+                // Altbestand-Guard MUSS auf den ROHEN Body schauen: der Marker
+                // ist ein HTML-Kommentar, den HTMLPurifier aus dem uebergebenen
+                // $body (via getBodyWithFormatedLinks) entfernt — auf $body waere
+                // der Guard immer false und der Cleaner liefe ueber alten Output.
+                if (strpos((string) $thread->body, 'mmc:cleaned') !== false) {
+                    return $body; // v2.0.x-Altbestand: Body wurde beim Abruf ersetzt
                 }
                 $from = (string) ($thread->from ?: ($conversation->customer_email ?? ''));
                 // WICHTIG: den ROHEN gespeicherten Body cleanen — der uebergebene

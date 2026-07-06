@@ -158,7 +158,8 @@ class Settings
                 }
             }
 
-            \Session::flash('flash_success_floating', 'Flowkom-Einstellungen gespeichert.');
+            // (Kein eigener Success-Flash: FreeScouts Save-Loop setzt danach
+            // selbst "Settings updated" auf denselben Key und ueberschriebe ihn.)
             return $request;
         }, 20, 3);
     }

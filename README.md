@@ -8,7 +8,7 @@ Ein Modul, volles Paket: verbindet FreeScout mit Flowkom und macht Marktplatz-Su
 |---|---|
 | **Flowkom-Widget** | Kundendaten, Bestellungen & Tracking aus Flowkom in der Ticket-Sidebar |
 | **QuickLinks** | Ein Klick zu: Bestellung im eBay Seller Hub / Amazon Seller Central, eBay-Käuferkonversation, Artikelseite |
-| **Mail-Cleaner** | Entfernt beim Import den Template-Müll aus eBay-/Amazon-Mails — Ticket zeigt nur Kundennachricht + Bestelldaten. Käuferfotos bleiben erhalten. Fail-open: Unbekanntes bleibt unverändert |
+| **Mail-Cleaner** | Blendet den Template-Müll aus eBay-/Amazon-Mails **nur in der Ticket-Ansicht** aus — Ticket zeigt nur Kundennachricht + Bestelldaten, Käuferfotos bleiben erhalten. **Wichtig:** der gespeicherte Body bleibt IMMER das Original (nur so bleiben eBays versteckte Zustell-Marker in der zitierten Historie erhalten; ein ersetzter Body führte zu Bounces — nie wieder einen fetch-time-Body-Ersatz einbauen). Fail-open: Unbekanntes bleibt unverändert |
 | **eBay Ticket-Merger** | Folgenachrichten desselben Käufers zum selben Artikel landen im selben Ticket |
 | **Amazon Ticket-Merger** | Mails zur selben Bestellnummer landen im selben Ticket |
 | **Chat-Ansicht** | Umschaltbare Bubble-Ansicht pro Ticket (Sprechblasen-Symbol in der Toolbar) |

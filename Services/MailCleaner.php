@@ -63,10 +63,12 @@ class MailCleaner
         }
         $from = strtolower(trim($from));
 
-        if (preg_match('/@members\.ebay\./', $from)) {
+        // Absender an der Basis-Domain am Zeilenende verankert (kein Spoofing
+        // ueber x@members.ebay.evil.com bzw. x@marketplace.amazon.evil.com).
+        if (preg_match('/@members\.ebay\.[a-z]{2,3}(\.[a-z]{2})?$/', $from)) {
             return self::cleanEbayMember($body);
         }
-        if (strpos($from, '@marketplace.amazon.') !== false) {
+        if (preg_match('/@marketplace\.amazon\.[a-z]{2,3}(\.[a-z]{2})?$/', $from)) {
             return self::cleanAmazonBuyer($body);
         }
 
@@ -131,7 +133,7 @@ class MailCleaner
         if (preg_match_all('/<img\b[^>]*alt="Attachment \d+"[^>]*>/i', $body, $matches)) {
             foreach ($matches[0] as $tag) {
                 if (preg_match('/src="([^"]+)"/i', $tag, $src)
-                    && preg_match('/^https:\/\/[a-z0-9.-]+\.(ebay|ebaystatic|ebayimg)\.[a-z.]+\//i', html_entity_decode($src[1]))
+                    && preg_match('/^https:\/\/([a-z0-9-]+\.)*(ebay|ebaystatic|ebayimg)\.[a-z]{2,3}(\.[a-z]{2})?\//i', html_entity_decode($src[1]))
                 ) {
                     $images[] = $src[1];
                 }
