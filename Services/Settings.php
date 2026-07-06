@@ -138,27 +138,25 @@ class Settings
                 return $request;
             }
 
-            // Feature-Toggles werden vom FreeScout-Save-Loop selbst gespeichert
-            // (section_params default=true sorgt fuer korrektes false beim
-            // Abhaken). Hier NICHT anfassen — der alte dot-notation-Zugriff
-            // (`settings.flowkom\.feature_x`) las immer null.
-
-            \Option::set('flowkom.api_url', rtrim(trim((string) $request->input('settings.flowkom\.api_url', '')), '/'));
-            $apiKey = trim((string) $request->input('settings.flowkom\.api_key', ''));
-            if ($apiKey !== '') {
-                \Option::set('flowkom.api_key', $apiKey);
+            // ALLE Felder speichert FreeScouts Core-Save-Loop selbst (sie stehen
+            // in section_settings; Feature-Toggles via default=true, api_key via
+            // safe_password). ACHTUNG: Laravels $request->input() kann Keys mit
+            // Punkten ('flowkom.api_key') NICHT per dot-notation adressieren —
+            // der fruehere Block las deshalb immer null und hat u.a. den
+            // gespeicherten API-Key bei jedem Speichern geleert (Widget weg).
+            //
+            // Einzige Ausnahme, die der Core-Loop nicht abdeckt: leeres
+            // API-Key-Feld heisst "gespeicherten Key behalten" — wir spiegeln
+            // dann den Bestandswert in den Request, damit der Core-Loop ihn
+            // unveraendert zurueckschreibt statt ihn zu leeren.
+            $settingsInput = $request->input('settings', []);
+            if (is_array($settingsInput)) {
+                $apiKeyInput = trim((string) ($settingsInput['flowkom.api_key'] ?? ''));
+                if ($apiKeyInput === '' || preg_match('/^\*+$/', $apiKeyInput)) {
+                    $settingsInput['flowkom.api_key'] = self::apiKey();
+                    $request->merge(['settings' => $settingsInput]);
+                }
             }
-
-            \Option::set('flowkom.ebay_domain', trim((string) $request->input('settings.flowkom\.ebay_domain', 'ebay.de')) ?: 'ebay.de');
-            \Option::set('flowkom.sc_domain', trim((string) $request->input('settings.flowkom\.sc_domain', 'sellercentral.amazon.de')) ?: 'sellercentral.amazon.de');
-
-            $maxAge = (int) $request->input('settings.flowkom\.merge_max_age_days', 60);
-            \Option::set('flowkom.merge_max_age_days', $maxAge > 0 ? $maxAge : 60);
-
-            $mailboxIds = $request->input('settings.flowkom\.mailbox_ids', []);
-            \Option::set('flowkom.mailbox_ids', json_encode(is_array($mailboxIds) ? $mailboxIds : []));
-
-            \Option::set('flowkom.tracking_reply_template', (string) $request->input('settings.flowkom\.tracking_reply_template', ''));
 
             \Session::flash('flash_success_floating', 'Flowkom-Einstellungen gespeichert.');
             return $request;
