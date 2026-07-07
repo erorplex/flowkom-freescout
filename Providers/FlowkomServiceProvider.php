@@ -76,6 +76,28 @@ class FlowkomServiceProvider extends ServiceProvider
             return $body;
         }, 20, 4);
 
+        // eBay-Zustell-Garantie (IMMER aktiv, kein Toggle): eBay stellt
+        // Verkaeufer-Antworten an xxx@members.ebay.* nur zu, wenn die
+        // zitierte Original-Mail mitgesendet wird. FreeScouts Default ist
+        // APP_EMAIL_CONV_HISTORY=none — ohne diesen Filter bounct auf einer
+        // frisch aufgesetzten Instanz jede eBay-Antwort. Erzwingt den Verlauf
+        // nur fuer eBay-Konversationen; alle anderen folgen der Instanz-
+        // Einstellung. Ueberstimmt bewusst auch die Pro-Antwort-Auswahl des
+        // Agents ("kein Verlauf" wuerde bouncen).
+        \Eventy::addFilter('jobs.send_reply_to_customer.send_previous_messages', function ($send, $last_thread, $threads, $conversation, $customer) {
+            try {
+                if ($send) {
+                    return $send;
+                }
+                if (MailCleaner::isEbayMemberAddress((string) ($conversation->customer_email ?? ''))) {
+                    return true;
+                }
+            } catch (\Throwable $e) {
+                \Helper::log(FLOWKOM_MODULE, 'EbayHistory-ERROR (Instanz-Einstellung gilt): ' . $e->getMessage());
+            }
+            return $send;
+        }, 20, 5);
+
         if (Settings::featureOn('quicklinks')) {
             QuickLinks::register();
         }

@@ -56,6 +56,19 @@ class MailCleaner
      * @param string $from Absenderadresse (lowercase)
      * @return string|null
      */
+    /**
+     * Erkennt eBay-Member-Relay-Adressen (xxx@members.ebay.de/.com/.co.uk …).
+     * Auch vom ServiceProvider genutzt, um fuer eBay-Antworten den zitierten
+     * Verlauf zu erzwingen — eBay stellt sonst nicht zu.
+     */
+    public static function isEbayMemberAddress($from)
+    {
+        if (!is_string($from) || $from === '') {
+            return false;
+        }
+        return (bool) preg_match('/@members\.ebay\.[a-z]{2,3}(\.[a-z]{2})?$/', strtolower(trim($from)));
+    }
+
     public static function clean($body, $from)
     {
         if (!is_string($body) || $body === '' || !is_string($from)) {
@@ -65,7 +78,7 @@ class MailCleaner
 
         // Absender an der Basis-Domain am Zeilenende verankert (kein Spoofing
         // ueber x@members.ebay.evil.com bzw. x@marketplace.amazon.evil.com).
-        if (preg_match('/@members\.ebay\.[a-z]{2,3}(\.[a-z]{2})?$/', $from)) {
+        if (self::isEbayMemberAddress($from)) {
             return self::cleanEbayMember($body);
         }
         if (preg_match('/@marketplace\.amazon\.[a-z]{2,3}(\.[a-z]{2})?$/', $from)) {
