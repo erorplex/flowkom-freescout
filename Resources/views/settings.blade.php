@@ -102,6 +102,21 @@
         </div>
     </div>
 
+    <div class="form-group">
+        <label class="col-sm-2 control-label">{{ __('Eigenschaften in der Sammlung') }}</label>
+        <div class="col-sm-6">
+            @foreach ($brainflow_prop_fields as $propKey => $propLabel)
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" name="settings[flowkom.brainflow_prop_{{ $propKey }}]" value="1" @if ($settings['flowkom.brainflow_prop_'.$propKey] ?? true) checked @endif>
+                        {{ __($propLabel) }}
+                    </label>
+                </div>
+            @endforeach
+            <p class="form-help">{{ __('Wenn eine Zielseite gesetzt ist, wird sie automatisch zu einer Sammlung (Tabelle). Diese Felder werden dann als Spalten pro Ticket befüllt. Ohne Zielseite (oberste Ebene) ist diese Einstellung ohne Wirkung.') }}</p>
+        </div>
+    </div>
+
     <hr>
     <h4 class="margin-bottom">{{ __('Tracking-Antwort') }}</h4>
 

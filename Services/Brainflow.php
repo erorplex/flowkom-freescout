@@ -207,11 +207,28 @@ class Brainflow
                 'customer_email'      => mb_substr((string) $conversation->customer_email, 0, 490) ?: null,
                 'mailbox_name'        => mb_substr((string) optional($conversation->mailbox)->name, 0, 490) ?: null,
                 'target_parent_title' => Settings::brainflowParentTitle() ?: null,
+                'property_fields'     => Settings::brainflowPropertyFields(),
+                'channel'             => self::detectChannel($conversation),
                 'messages'            => $messages,
                 'attachments'         => $attachments,
             ],
             'attachments_mode' => $attachmentsMode,
         ];
+    }
+
+    /**
+     * Marktplatz-Kanal aus der Kundenadresse (für die Kanal-Property).
+     */
+    private static function detectChannel($conversation)
+    {
+        $email = strtolower((string) $conversation->customer_email);
+        if (preg_match('/@members\.ebay\./', $email)) {
+            return 'ebay';
+        }
+        if (preg_match('/@marketplace\.amazon\./', $email)) {
+            return 'amazon';
+        }
+        return 'email';
     }
 
     /**

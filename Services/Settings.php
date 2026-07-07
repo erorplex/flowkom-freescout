@@ -76,6 +76,37 @@ class Settings
     }
 
     /**
+     * Brainflow-Import: welche Ticket-Felder als Sammlungs-Property übernommen
+     * werden. Keys MÜSSEN mit Flowkoms IMPORT_FIELD_KEYS übereinstimmen.
+     * Als Einzel-Toggles (default=true) modelliert — so lässt sich jedes Feld
+     * einzeln abwählen (ein Checkbox-ARRAY könnte man nicht auf leer setzen).
+     */
+    const BRAINFLOW_PROP_FIELDS = [
+        'ticket_link'   => 'FreeScout-Ticket (Link)',
+        'ticket_number' => 'Ticket-Nr',
+        'customer'      => 'Kunde',
+        'mailbox'       => 'Postfach',
+        'channel'       => 'Kanal (eBay/Amazon/E-Mail)',
+        'imported_at'   => 'Importiert am',
+    ];
+
+    public static function brainflowPropertyOn($key)
+    {
+        return (bool) \Option::get('flowkom.brainflow_prop_' . $key, true);
+    }
+
+    public static function brainflowPropertyFields()
+    {
+        $fields = [];
+        foreach (array_keys(self::BRAINFLOW_PROP_FIELDS) as $key) {
+            if (self::brainflowPropertyOn($key)) {
+                $fields[] = $key;
+            }
+        }
+        return $fields;
+    }
+
+    /**
      * Postfach-Einschränkung für Merger/Cleaner. Leer = alle Postfächer.
      */
     public static function mailboxIds()
@@ -119,6 +150,9 @@ class Settings
             $settings['flowkom.tracking_reply_template'] = self::trackingTemplate();
             $settings['flowkom.brainflow_parent_title'] = self::brainflowParentTitle();
             $settings['flowkom.brainflow_attachments'] = self::brainflowAttachmentsMode();
+            foreach (array_keys(self::BRAINFLOW_PROP_FIELDS) as $propKey) {
+                $settings['flowkom.brainflow_prop_' . $propKey] = self::brainflowPropertyOn($propKey);
+            }
             return $settings;
         }, 20, 2);
 
@@ -131,8 +165,9 @@ class Settings
                 $mailbox_options[$mailbox->id] = $mailbox->name . ' (' . $mailbox->email . ')';
             }
             $params['template_vars'] = [
-                'mailbox_options' => $mailbox_options,
-                'features'        => self::FEATURES,
+                'mailbox_options'      => $mailbox_options,
+                'features'             => self::FEATURES,
+                'brainflow_prop_fields' => self::BRAINFLOW_PROP_FIELDS,
             ];
             // WICHTIG: Jeder Feature-Toggle braucht default=true, sonst loescht
             // FreeScouts Save-Loop die Option beim Abhaken (Checkbox nicht im
@@ -141,6 +176,10 @@ class Settings
             $settingsParams = [];
             foreach (array_keys(self::FEATURES) as $key) {
                 $settingsParams['flowkom.feature_' . $key] = ['default' => true];
+            }
+            // Property-Toggles der Import-Sammlung: gleiche default=true-Falle.
+            foreach (array_keys(self::BRAINFLOW_PROP_FIELDS) as $propKey) {
+                $settingsParams['flowkom.brainflow_prop_' . $propKey] = ['default' => true];
             }
             // API-Key als safe_password: ein rein aus '*' bestehender Wert
             // (unveraendertes Feld) wird vom Save-Loop uebersprungen -> der
