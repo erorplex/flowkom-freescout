@@ -134,8 +134,13 @@ class Brainflow
      */
     public static function buildPayload($conversation)
     {
+        // Interne Notizen (type=note) optional mitnehmen.
+        $threadTypes = [Thread::TYPE_CUSTOMER, Thread::TYPE_MESSAGE];
+        if (Settings::brainflowIncludeNotes()) {
+            $threadTypes[] = Thread::TYPE_NOTE;
+        }
         $threads = $conversation
-            ->getThreads(null, null, [Thread::TYPE_CUSTOMER, Thread::TYPE_MESSAGE])
+            ->getThreads(null, null, $threadTypes)
             ->sortBy('created_at')
             ->values();
 
@@ -144,7 +149,9 @@ class Brainflow
         $attachments = [];
 
         foreach ($threads as $thread) {
-            $isCustomer = (int) $thread->type === Thread::TYPE_CUSTOMER;
+            $type = (int) $thread->type;
+            $isCustomer = $type === Thread::TYPE_CUSTOMER;
+            $isNote = $type === Thread::TYPE_NOTE;
             $body = (string) $thread->body;
 
             if ($isCustomer) {
@@ -161,6 +168,7 @@ class Brainflow
                 $author = trim((string) optional($thread->customer_cached ?? $thread->customer)->getFullName(true))
                     ?: (string) ($conversation->customer_email ?? 'Kunde');
             } else {
+                // Agent-Antwort ODER interne Notiz: beide vom Agent, roher Body
                 $author = trim((string) optional($thread->created_by_user_cached ?? $thread->created_by_user)->getFullName())
                     ?: 'Agent';
             }
@@ -168,7 +176,7 @@ class Brainflow
             $messageIndex = count($messages);
             $messages[] = [
                 'author'      => mb_substr($author, 0, 490),
-                'author_type' => $isCustomer ? 'customer' : 'agent',
+                'author_type' => $isCustomer ? 'customer' : ($isNote ? 'note' : 'agent'),
                 'date'        => (string) $thread->created_at,
                 'html'        => mb_substr($body, 0, 195000),
             ];

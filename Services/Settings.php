@@ -76,6 +76,14 @@ class Settings
     }
 
     /**
+     * Brainflow-Import: interne Notizen (type=note) mitimportieren.
+     */
+    public static function brainflowIncludeNotes()
+    {
+        return (bool) \Option::get('flowkom.brainflow_include_notes', true);
+    }
+
+    /**
      * Brainflow-Import: welche Ticket-Felder als Sammlungs-Property übernommen
      * werden. Keys MÜSSEN mit Flowkoms IMPORT_FIELD_KEYS übereinstimmen.
      * Als Einzel-Toggles (default=true) modelliert — so lässt sich jedes Feld
@@ -150,6 +158,7 @@ class Settings
             $settings['flowkom.tracking_reply_template'] = self::trackingTemplate();
             $settings['flowkom.brainflow_parent_title'] = self::brainflowParentTitle();
             $settings['flowkom.brainflow_attachments'] = self::brainflowAttachmentsMode();
+            $settings['flowkom.brainflow_include_notes'] = self::brainflowIncludeNotes();
             foreach (array_keys(self::BRAINFLOW_PROP_FIELDS) as $propKey) {
                 $settings['flowkom.brainflow_prop_' . $propKey] = self::brainflowPropertyOn($propKey);
             }
@@ -181,6 +190,8 @@ class Settings
             foreach (array_keys(self::BRAINFLOW_PROP_FIELDS) as $propKey) {
                 $settingsParams['flowkom.brainflow_prop_' . $propKey] = ['default' => true];
             }
+            // Notizen-Toggle: gleiche default=true-Falle wie die Feature-Toggles.
+            $settingsParams['flowkom.brainflow_include_notes'] = ['default' => true];
             // API-Key als safe_password: ein rein aus '*' bestehender Wert
             // (unveraendertes Feld) wird vom Save-Loop uebersprungen -> der
             // gespeicherte Key geht beim Speichern nicht verloren.

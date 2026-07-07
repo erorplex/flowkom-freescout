@@ -117,6 +117,19 @@
         </div>
     </div>
 
+    <div class="form-group">
+        <label class="col-sm-2 control-label">{{ __('Interne Notizen') }}</label>
+        <div class="col-sm-6">
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" name="settings[flowkom.brainflow_include_notes]" value="1" @if ($settings['flowkom.brainflow_include_notes'] ?? true) checked @endif>
+                    {{ __('Interne Notizen mitimportieren') }}
+                </label>
+            </div>
+            <p class="form-help">{{ __('Nimmt die internen Ticket-Notizen (nicht an den Kunden gesendet) mit in die Brainflow-Seite auf, kenntlich als „Interne Notiz".') }}</p>
+        </div>
+    </div>
+
     <hr>
     <h4 class="margin-bottom">{{ __('Tracking-Antwort') }}</h4>
 
