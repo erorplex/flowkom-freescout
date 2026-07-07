@@ -21,6 +21,7 @@ class Settings
         'chatview'     => 'Chat-Ansicht (Bubble-Ansicht pro Ticket umschaltbar)',
         'tracking_reply' => 'Ein-Klick-Tracking-Antwort im Widget',
         'displayfix'   => 'E-Mail-Darstellungs-Fix (breite HTML-Mails, Tracking-Pixel)',
+        'brainflow'    => 'Brainflow-Import (Ticket mit einem Klick als Brainflow-Seite in Flowkom sichern)',
     ];
 
     const DEFAULT_TRACKING_TEMPLATE = "Guten Tag,\n\nvielen Dank für Ihre Nachricht. Ihre Bestellung wurde mit {carrier} versendet.\n\nSendungsnummer: {tracking_number}\nSendungsverfolgung: {tracking_url}\n\nSollte die Sendung nicht innerhalb der nächsten Werktage ankommen, melden Sie sich gerne erneut bei uns.";
@@ -54,6 +55,24 @@ class Settings
     {
         $tpl = (string) \Option::get('flowkom.tracking_reply_template', '');
         return $tpl !== '' ? $tpl : self::DEFAULT_TRACKING_TEMPLATE;
+    }
+
+    /**
+     * Brainflow-Import: Titel der Sammelseite in Brainflow (pro User
+     * automatisch angelegt). Leer = Seiten landen auf der Wurzelebene.
+     */
+    public static function brainflowParentTitle()
+    {
+        return trim((string) \Option::get('flowkom.brainflow_parent_title', 'Helpdesk-Importe'));
+    }
+
+    /**
+     * Brainflow-Import: Anhangs-Übernahme (none|images|all).
+     */
+    public static function brainflowAttachmentsMode()
+    {
+        $mode = (string) \Option::get('flowkom.brainflow_attachments', 'none');
+        return in_array($mode, ['none', 'images', 'all'], true) ? $mode : 'none';
     }
 
     /**
@@ -98,6 +117,8 @@ class Settings
             $settings['flowkom.merge_max_age_days'] = (int) \Option::get('flowkom.merge_max_age_days', 60);
             $settings['flowkom.mailbox_ids'] = self::mailboxIds();
             $settings['flowkom.tracking_reply_template'] = self::trackingTemplate();
+            $settings['flowkom.brainflow_parent_title'] = self::brainflowParentTitle();
+            $settings['flowkom.brainflow_attachments'] = self::brainflowAttachmentsMode();
             return $settings;
         }, 20, 2);
 

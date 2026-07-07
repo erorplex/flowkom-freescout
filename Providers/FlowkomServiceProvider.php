@@ -3,6 +3,7 @@
 namespace Modules\Flowkom\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Modules\Flowkom\Services\Brainflow;
 use Modules\Flowkom\Services\ChatView;
 use Modules\Flowkom\Services\DisplayFix;
 use Modules\Flowkom\Services\MailCleaner;
@@ -110,6 +111,11 @@ class FlowkomServiceProvider extends ServiceProvider
         if (Settings::featureOn('widget')) {
             $this->registerWidget();
         }
+        if (Settings::featureOn('brainflow')) {
+            // Sichtbarkeit zusätzlich workspace-gated (Capability-Check,
+            // gecacht, fail-closed) — siehe Brainflow::available().
+            Brainflow::register();
+        }
     }
 
     public function register()
@@ -126,6 +132,17 @@ class FlowkomServiceProvider extends ServiceProvider
             'namespace'  => 'Modules\Flowkom\Http\Controllers',
         ], function () {
             \Route::post('/test', 'FlowkomController@test')->name('flowkom.test');
+        });
+
+        // PROJ-588: Brainflow-Save für ALLE Agents (keine admin-Rolle) —
+        // Ticket-Zugriff prüft der Controller über die ConversationPolicy.
+        \Route::group([
+            'middleware' => ['web', 'auth'],
+            'prefix'     => 'flowkom',
+            'namespace'  => 'Modules\Flowkom\Http\Controllers',
+        ], function () {
+            \Route::post('/brainflow/save/{conversationId}', 'FlowkomController@brainflowSave')
+                ->name('flowkom.brainflow_save');
         });
     }
 

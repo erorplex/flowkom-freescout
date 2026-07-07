@@ -2,11 +2,51 @@
 
 namespace Modules\Flowkom\Http\Controllers;
 
+use App\Conversation;
 use App\Http\Controllers\Controller;
+use Modules\Flowkom\Services\Brainflow;
 use Modules\Flowkom\Services\Settings;
 
 class FlowkomController extends Controller
 {
+    /**
+     * PROJ-588: Ticket als Brainflow-Draft an Flowkom senden.
+     * Liefert { import_url } für window.open — die Seite entsteht erst in
+     * der Flowkom-Session des Agents (Owner = eingeloggter Flowkom-User).
+     */
+    public function brainflowSave($conversationId)
+    {
+        try {
+            if (!Settings::featureOn('brainflow')) {
+                return response()->json(['error' => 'Brainflow-Import ist deaktiviert.'], 403);
+            }
+
+            $conversation = Conversation::find((int) $conversationId);
+            if (!$conversation) {
+                return response()->json(['error' => 'Ticket nicht gefunden.'], 404);
+            }
+
+            // Zugriff wie in der Ticketansicht (Mandanten-/Postfach-Rechte)
+            if (!auth()->user() || !auth()->user()->can('view', $conversation)) {
+                return response()->json(['error' => 'Kein Zugriff auf dieses Ticket.'], 403);
+            }
+
+            $body = Brainflow::buildPayload($conversation);
+            if ($body === null) {
+                return response()->json(['error' => 'Ticket enthält keine importierbaren Nachrichten.'], 422);
+            }
+
+            $result = Brainflow::postDraft($body);
+            if (empty($result['import_url'])) {
+                return response()->json(['error' => 'Flowkom lieferte keine Import-URL.'], 502);
+            }
+
+            return response()->json(['import_url' => $result['import_url']]);
+        } catch (\Throwable $e) {
+            return response()->json(['error' => $e->getMessage()], 502);
+        }
+    }
+
     public function test()
     {
         $apiUrl = Settings::apiUrl();

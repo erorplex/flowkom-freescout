@@ -13,6 +13,7 @@ Ein Modul, volles Paket: verbindet FreeScout mit Flowkom und macht Marktplatz-Su
 | **Amazon Ticket-Merger** | Mails zur selben Bestellnummer landen im selben Ticket |
 | **Chat-Ansicht** | Umschaltbare Bubble-Ansicht pro Ticket (Sprechblasen-Symbol in der Toolbar) |
 | **Tracking-Antwort** | Ein Klick im Widget fügt eine fertige Antwort mit Trackingdaten in den Editor ein (Vorlage anpassbar) |
+| **Brainflow-Import** | „In Brainflow sichern" im Ticket: speichert den kompletten Ticket-Verlauf als Brainflow-Seite in Flowkom und öffnet sie im neuen Tab. Die Seite gehört dem Flowkom-User, der den Import (eingeloggt) abschließt — nicht dem API-Key. Zielseite + Anhangs-Übernahme (keine/Bilder/alle) konfigurierbar. Sichtbar nur, wenn Brainflow im Flowkom-Workspace aktiviert ist (Voraussetzung: Flowkom-Deploy mit PROJ-588) |
 
 ## Installation
 

@@ -80,6 +80,29 @@
     </div>
 
     <hr>
+    <h4 class="margin-bottom">{{ __('Brainflow-Import') }}</h4>
+
+    <div class="form-group">
+        <label class="col-sm-2 control-label">{{ __('Zielseite für Importe') }}</label>
+        <div class="col-sm-6">
+            <input type="text" class="form-control input-sized" name="settings[flowkom.brainflow_parent_title]" value="{{ $settings['flowkom.brainflow_parent_title'] ?? 'Helpdesk-Importe' }}" placeholder="Helpdesk-Importe">
+            <p class="form-help">{{ __('Sammelseite in Brainflow, unter der gespeicherte Tickets landen (wird pro Nutzer automatisch angelegt). Leer lassen = oberste Ebene.') }}</p>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-sm-2 control-label">{{ __('Anhänge übernehmen') }}</label>
+        <div class="col-sm-6">
+            <select class="form-control input-sized" name="settings[flowkom.brainflow_attachments]">
+                <option value="none" @if (($settings['flowkom.brainflow_attachments'] ?? 'none') == 'none') selected @endif>{{ __('Nur Ticket-Link (keine Dateien kopieren)') }}</option>
+                <option value="images" @if (($settings['flowkom.brainflow_attachments'] ?? 'none') == 'images') selected @endif>{{ __('Bilder übernehmen') }}</option>
+                <option value="all" @if (($settings['flowkom.brainflow_attachments'] ?? 'none') == 'all') selected @endif>{{ __('Alle Dateien übernehmen') }}</option>
+            </select>
+            <p class="form-help">{{ __('Ob Ticket-Anhänge in die Brainflow-Seite kopiert werden. Der Link zum FreeScout-Ticket ist immer enthalten.') }}</p>
+        </div>
+    </div>
+
+    <hr>
     <h4 class="margin-bottom">{{ __('Tracking-Antwort') }}</h4>
 
     <div class="form-group">
