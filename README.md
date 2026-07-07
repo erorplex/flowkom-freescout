@@ -38,9 +38,13 @@ Das Modul nutzt FreeScouts nativen Update-Mechanismus: Sobald eine neue Version 
 
 ### Release veröffentlichen (intern)
 
-1. `version` in `module.json` erhöhen.
-2. `zip -rq Flowkom-latest.zip Flowkom` (der ZIP enthält den Ordner `Flowkom/`).
-3. `module.json` + `Flowkom-latest.zip` nach `freescout/public/fs-modules/flowkom/` auf den Update-Server hochladen (aktuell helpdesk.pixkom.com; bei Umzug auf z. B. updates.flowkom.de vorher ein Release mit neuen `latestVersion*Url`s ausliefern).
+Kanal ist das öffentliche GitHub-Repo `erorplex/flowkom-freescout`. `module.json` zeigt mit `latestVersionUrl`/`latestVersionZipUrl` auf `raw main/module.json` bzw. `releases/latest/download/Flowkom.zip`.
+
+1. `version` in `module.json` erhöhen (Bugfix = Patch, Feature = Minor).
+2. Committen und Tag `vX.Y.Z` pushen (Tag-Version **muss** der `module.json`-Version entsprechen).
+3. Die GitHub-Action `Release` baut daraus automatisch `Flowkom.zip` (Ordner `Flowkom/` im Root) und legt das Release an — kein manueller FTP-Upload mehr.
+
+Bestehende Instanzen sehen das Update dann unter **Verwalten → Module**. (Der alte Kanal `helpdesk.pixkom.com/fs-modules/flowkom/` diente nur als Migrations-Brücke und ist abgelöst.)
 
 ## Kompatibilität
 
